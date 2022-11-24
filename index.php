@@ -47,16 +47,23 @@
 
                             // Excel Convert to VT
                             foreach ($xlsx->rows() as $key => $satir) {
-                                $sorgu = $db->prepare(" INSERT INTO ogrenciler SET
-                                isim = :isim,
-                                mail = :mail,
-                                Telefon = :Telefon
-                                 ");
-                                $sorgu->execute([
-                                    'isim' => $satir[0],
-                                    'mail' => $satir[1],
-                                    'Telefon' => $satir[2]
-                                ]);
+
+                                // Over Colum Control
+                                if (count($satir) >= 3) {
+                                    $sorgu = $db->prepare(" INSERT INTO ogrenciler SET
+                                    isim = :isim,
+                                    mail = :mail,
+                                    Telefon = :Telefon
+                                    ");
+                                    $sorgu->execute([
+                                        'isim' => $satir[0],
+                                        'mail' => $satir[1],
+                                        'Telefon' => $satir[2]
+                                    ]);
+                                } else {
+                                    echo "Boş Ve hatalı Excel lütfen tekrardan deneyiniz";
+                                }
+
                             }
 
                         } else {
@@ -85,9 +92,9 @@
                 <thead class="bg-dark text-white">
                     <tr>
                         <th scope="col">Table</th>
-                        <th scope="col">İsim</th>
-                        <th scope="col">Soyisim</th>
-                        <th scope="col">Mail</th>
+                        <th scope="col">KODU</th>
+                        <th scope="col">RENKLER</th>
+                        <th scope="col">DEĞER</th>
                     </tr>
                 </thead>
                 <tbody>

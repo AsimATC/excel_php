@@ -5,29 +5,32 @@ include "PHPExcel.php";
 
 
 $myexcel = new PHPExcel(); // Excel İmport Start
-$myexcel->getActiveSheet()->setTitle("Öğrenciler"); // Excel Bottom Title name
-$myexcel->getActiveSheet()->setCellValue("A1", "Ürün Kodu"); // Excel Thead Title
+$myexcel->getActiveSheet()->setTitle("Ogrenciler"); // Excel Bottom Title name
+$myexcel->getActiveSheet()->setCellValue("A1", "Urun Kodu"); // Excel Thead Title
+
 
 // Connet Vt Table
 $urunkod = $db->prepare("SELECT * FROM ogrenciler ");
+$urunkod->execute(array());
 
 $i = 2; // Start two Rows
-while($urunyaz = $urunkod->fetch(PDO::FETCH_ASSOC)) {
+while ($urunyaz = $urunkod->fetch(PDO::FETCH_ASSOC)) {
     $myexcel->getActiveSheet()->setCellValue("A" . $i, $urunyaz['isim']); // Exce Column Save
+
+    $link = "https://tonyukukdemo.com/flora-liste/urun.php?urunid=".$urunyaz['id'];
+
+
+    $myexcel->getActiveSheet()->getCellByColumnAndRow(0,$i)->getHyperlink()->setUrl($link);
     $i++;
 }
 
-header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-header('Content-Disposition: attachment;filename="urunler.xlsx"');
-header('Cache-Control: max-age=0');
-header('Cache-Control: max-age=1');
 
-header ('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); 
-header ('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT'); 
-header ('Cache-Control: cache, must-revalidate'); 
-header ('Pragma: public'); 
-
-$download = PHPExcel_IOFactory::createWriter($myexcel, 'Excel2007');
-$download->save('php://output');
+// Save Excel 2007 file
+#echo date('H:i:s') . " Write to Excel2007 format\n";
+$downloadsexcel = PHPExcel_IOFactory::createWriter($myexcel, 'Excel2007');
+ob_end_clean();
+// We'll be outputting an excel file
+header('Content-type: application/vnd.ms-excel');
+header('Content-Disposition: attachment; filename="exceladi.xlsx"');
+$downloadsexcel->save('php://output');
 exit;
-?>

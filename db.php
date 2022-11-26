@@ -1,6 +1,7 @@
 <?php
 
 $mysqlsunucu = "localhost";
+//$mysqladi = "flora";
 $mysqladi = "excel_vt";
 $mysqlkullanici = "root";
 $mysqlsifre = "";

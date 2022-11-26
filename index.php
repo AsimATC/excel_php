@@ -48,24 +48,20 @@
                             // Excel Convert to VT
                             foreach ($xlsx->rows() as $key => $satir) {
 
-                                // Over Colum Control
-                                if (count($satir) >= 3) {
+                                // Excel Row Control
+                                if (count($satir) >= 1) {
                                     $sorgu = $db->prepare(" INSERT INTO ogrenciler SET
-                                    isim = :isim,
-                                    mail = :mail,
-                                    Telefon = :Telefon
+                                    kodu = :kodu,
+                                    durum = :durum
                                     ");
                                     $sorgu->execute([
-                                        'isim' => $satir[0],
-                                        'mail' => $satir[1],
-                                        'Telefon' => $satir[2]
+                                        'kodu' => $satir[0],
+                                        'durum' => "off",
                                     ]);
                                 } else {
                                     echo "Boş Ve hatalı Excel lütfen tekrardan deneyiniz";
                                 }
-
                             }
-
                         } else {
                             echo SimpleXLSX::parseError(); // başarısız
                         }
@@ -80,9 +76,24 @@
         <!-- Excel button -->
         <div class="row mb-3">
             <div class="col-md-12 text-end">
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                    EXCEL UPLOAD
-                </button>
+                <a  href="core/excek-export.php" class="btn btn-danger p-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+                        <line x1="12" y1="11" x2="12" y2="17" />
+                        <polyline points="9 14 12 17 15 14" />
+                    </svg>
+            </a>
+                <a type="button" class="btn btn-success p-1" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-upload" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+                        <line x1="12" y1="11" x2="12" y2="17" />
+                        <polyline points="9 14 12 11 15 14" />
+                    </svg>
+            </a>
             </div>
         </div>
 
@@ -92,9 +103,9 @@
                 <thead class="bg-dark text-white">
                     <tr>
                         <th scope="col">Table</th>
-                        <th scope="col">KODU</th>
-                        <th scope="col">RENKLER</th>
-                        <th scope="col">DEĞER</th>
+                        <th scope="col">İsim</th>
+                        <th scope="col">Soyisim</th>
+                        <th scope="col">Mail</th>
                     </tr>
                 </thead>
                 <tbody>

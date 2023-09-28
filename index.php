@@ -1,4 +1,26 @@
-<?php include "db.php"; ?>
+<?php
+
+include "db.php";
+
+function SEOLink($baslik)
+{
+    $metin_aranan = array("ş", "Ş", "ı", "ü", "Ü", "ö", "Ö", "ç", "Ç", "ş", "Ş", "ı", "ğ", "Ğ", "İ", "ö", "Ö", "Ç", "ç", "ü", "Ü");
+    $metin_yerine_gelecek = array("s", "S", "i", "u", "U", "o", "O", "c", "C", "s", "S", "i", "g", "G", "I", "o", "O", "C", "c", "u", "U");
+    $baslik = str_replace($metin_aranan, $metin_yerine_gelecek, $baslik);
+    $baslik = preg_replace("@[^a-z0-9\-_şıüğçİŞĞÜÇ]+@i", "-", $baslik);
+    $baslik = strtolower($baslik);
+    $baslik = preg_replace('/&.+?;/', '', $baslik);
+    $baslik = preg_replace('|-+|', '-', $baslik);
+    $baslik = preg_replace('/#/', '', $baslik);
+    $baslik = str_replace('.', '', $baslik);
+    $baslik = str_replace('“', '', $baslik);
+    $baslik = str_replace('”', '', $baslik);
+    $baslik = mb_convert_encoding($baslik, 'UTF-8', 'UTF-8');
+    $baslik = str_replace('?', '', $baslik);
+    $baslik = trim($baslik, '-');
+    return $baslik;
+}
+?>
 
 <!doctype html>
 <html lang="tr">
@@ -38,26 +60,79 @@
                         $dosya_ismi = $_FILES['excel_file']['name'];
                         $sayi = rand(1000, 9999);
                         $isim = $sayi . $dosya_ismi;
-                        move_uploaded_file($gecici_isim, "gecici/isim");
+                        move_uploaded_file($gecici_isim, "gecici/" . $isim);
 
                         include_once "excel.php";
 
                         // File Upload Control
-                        if ($xlsx = SimpleXLSX::parse("gecici/isim")) {
+                        if ($xlsx = SimpleXLSX::parse("gecici/" . $isim)) {
 
-                            // Excel Convert to VT
+                            // Excel Convert to VT 
                             foreach ($xlsx->rows() as $key => $satir) {
+ 
+                                $kod = $satir[0];
+                                $kursadi = $satir[1];
+                                $kategori = $satir[2];
+                                $saat = $satir[3];
+
+                                // Seo Link Oluşturma, Vt de Aynısı Varsa 2. bir tane oluşturuyor 
+                                $seo = SEOLink($kursadi);
+
+                                $seosor = $db->prepare("SELECT * FROM sayfa WHERE seo = ?");
+                                $seosor->execute(array($seo));
+
+                                // Seo Link Oluşturuluyor
+                                $count = $seosor->rowCount();
+                                if ($count != 0) {
+                                    $rand = rand(10, 100);
+                                    $seo =   $seo . $rand;
+
+                                    $seosor = $db->prepare("SELECT * FROM sayfa WHERE seo = ?");
+                                    $seosor->execute(array($seo));
+                                    $count = $seosor->rowCount();
+
+                                    if ($count != 0) {
+                                        echo "Seo 0'a Eşit Değil !";
+                                    }
+                                }
+
+
+                                $katsor = $db->prepare("SELECT * FROM kategori WHERE kategori_adi = ? ");
+                                $katsor->execute([$kategori]);
+                                $katyaz = $katsor->fetch(PDO::FETCH_ASSOC);
+                                $katid = $katyaz['id'];
+
+                                //echo '<br> Kod : ' . $kod . 'kursadi : ' . $kursadi . 'kategori : ' . $katid  . ' saat : ' . $saat;
 
                                 // Excel Row Control
                                 if (count($satir) >= 1) {
-                                    $sorgu = $db->prepare(" INSERT INTO ogrenciler SET
-                                    kodu = :kodu,
-                                    durum = :durum
+                                    $sorgu = $db->prepare("INSERT INTO sayfa SET
+                                        sayfa_id = :sayfa_id,
+                                        baslik = :baslik,
+                                        on_yazi = :on_yazi,
+                                        kategori = :kategori,
+                                        kodu = :kodu,
+                                        dil = :dil,
+                                        seo = :seo
                                     ");
                                     $sorgu->execute([
-                                        'kodu' => $satir[0],
-                                        'durum' => "off",
+                                        'sayfa_id' => 109,
+                                        'baslik' => $kursadi,
+                                        'on_yazi' => $kod, 
+                                        'kategori' => $katid,
+                                        'kodu' => $saat,
+                                        'dil' => 'tr',
+                                        'seo' => $seo,
                                     ]);
+
+
+                                    if ($sorgu) {
+                                        echo "başarı ile eklendi";
+                                    } else {
+                                        echo "eklerken sorun olutşu";
+                                        echo '<br> Kod : ' . $kod . 'kursadi : ' . $kursadi . 'kategori : ' . $katid  . ' saat : ' . $saat;
+                                    } 
+
                                 } else {
                                     echo "Boş Ve hatalı Excel lütfen tekrardan deneyiniz";
                                 }
@@ -76,7 +151,7 @@
         <!-- Excel button -->
         <div class="row mb-3">
             <div class="col-md-12 text-end">
-                <a  href="core/excek-export.php" class="btn btn-danger p-1">
+                <a href="core/excek-export.php" class="btn btn-danger p-1">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M14 3v4a1 1 0 0 0 1 1h4" />
@@ -84,7 +159,7 @@
                         <line x1="12" y1="11" x2="12" y2="17" />
                         <polyline points="9 14 12 17 15 14" />
                     </svg>
-            </a>
+                </a>
                 <a type="button" class="btn btn-success p-1" data-bs-toggle="modal" data-bs-target="#exampleModal">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-upload" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -93,7 +168,7 @@
                         <line x1="12" y1="11" x2="12" y2="17" />
                         <polyline points="9 14 12 11 15 14" />
                     </svg>
-            </a>
+                </a>
             </div>
         </div>
 
@@ -111,7 +186,7 @@
                 <tbody>
                     <?php
 
-                    $ogrenciler = $db->prepare("SELECT * FROM  ogrenciler ");
+                    $ogrenciler = $db->prepare("SELECT * FROM sayfa WHERE sayfa_id = 109 ");
                     $ogrenciler->execute(array());
 
                     while ($ogrenciyaz = $ogrenciler->fetch(PDO::FETCH_ASSOC)) {
@@ -119,9 +194,9 @@
                     ?>
                         <tr>
                             <th scope="row"><?php echo $ogrenciyaz['id'] ?></th>
-                            <td><?php echo $ogrenciyaz['isim'] ?></td>
-                            <td><?php echo $ogrenciyaz['mail'] ?></td>
-                            <td><?php echo $ogrenciyaz['Telefon'] ?></td>
+                            <td><?php echo $ogrenciyaz['baslik'] ?></td>
+                            <td><?php echo $ogrenciyaz['kategori'] ?></td>
+                            <td><?php echo $ogrenciyaz['on_yazi'] ?></td>
                         </tr>
                     <?php } ?>
                 </tbody>
